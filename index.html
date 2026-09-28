@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netlify Test Dashboard — 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #070a12;
+            --surface: #0f172a;
+            --surface-card: #1e293b;
+            --primary: #f8fafc;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --success: #10b981;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --radius: 14px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-main); padding: 40px 16px; display: flex; justify-content: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 800px; }
+
+        header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e3a8a 100%);
+            color: white;
+            padding: 28px 32px;
+            border-radius: var(--radius);
+            box-shadow: 0 20px 40px -15px rgba(30, 58, 138, 0.5);
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        header h1 { font-size: 1.5rem; font-weight: 800; background: linear-gradient(to right, #ffffff, #93c5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        header p { color: #cbd5e1; font-size: 0.85rem; margin-top: 6px; }
+
+        .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 24px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); margin-bottom: 20px; }
+        .card h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; }
+
+        .status-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.15); color: var(--success); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; border: 1px solid rgba(16, 185, 129, 0.3); margin-bottom: 16px; }
+        .dot { width: 8px; height: 8px; background-color: var(--success); border-radius: 50%; box-shadow: 0 0 8px var(--success); }
+
+        .btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+        .btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+        .output-box { background: #090e18; border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 16px; font-family: monospace; font-size: 0.85rem; color: #60a5fa; min-height: 50px; display: flex; align-items: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Netlify Deployment Test</h1>
+        <p>A lightweight verification page built with your executive dashboard styling.</p>
+    </header>
+
+    <div class="card">
+        <div class="status-badge">
+            <div class="dot"></div> System Online & Deployed Successfully
+        </div>
+        <h2>Test Controls</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
+            Click the button below to test client-side JavaScript execution and check the live timestamp.
+        </p>
+        <button class="btn" onclick="runTest()">Run System Check</button>
+        <div class="output-box" id="output">System check ready. Click the button above.</div>
+    </div>
+</div>
+
+<script>
+    function runTest() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString();
+        const dateString = now.toLocaleDateString();
+        
+        document.getElementById('output').innerText = `✓ Test passed! Client script running. Current time: ${timeString} on ${dateString}.`;
+    }
+</script>
+
+</body>
+</html>
