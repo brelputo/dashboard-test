@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Movement Dashboard</title>
+    <script>try { if (localStorage.getItem('dashboard_fx') === 'off') document.documentElement.classList.add('fx-off'); } catch (e) { /* storage unavailable */ }</script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💲</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    
+
+
+
+</head>
+<body class="locked">
+
+
+
+
+<!-- SECURE LOGIN SCREEN (aurora + glass card + avatar ring + stagger + shimmer + greeting) -->
+<div id="login-overlay" class="plasma-lock">
+    <div class="pl-wallpaper" aria-hidden="true">
+        <div class="aurora a1"></div>
+        <div class="aurora a2"></div>
+        <div class="aurora a3"></div>
+        <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="plw1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3daee9" stop-opacity="0.30"/><stop offset="1" stop-color="#6366f1" stop-opacity="0.16"/></linearGradient>
+                <linearGradient id="plw2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6366f1" stop-opacity="0.24"/><stop offset="1" stop-color="#3daee9" stop-opacity="0.12"/></linearGradient>
+                <linearGradient id="plw3" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f8df5" stop-opacity="0.20"/><stop offset="1" stop-color="#818cf8" stop-opacity="0.08"/></linearGradient>
+            </defs>
+            <path d="M0,120 C320,260 640,-40 980,120 C1250,250 1450,160 1600,60 L1600,0 L0,0 Z" fill="url(#plw3)"/>
+            <path d="M0,640 C260,520 520,760 820,640 C1100,530 1340,420 1600,520 L1600,900 L0,900 Z" fill="url(#plw1)"/>
+            <path d="M0,730 C300,640 560,850 900,745 C1180,660 1400,600 1600,690 L1600,900 L0,900 Z" fill="url(#plw2)"/>
+        </svg>
+    </div>
+    <div class="pl-clock">
+        <div id="pl-time" class="pl-anim d1">--:--</div>
+        <div id="pl-date" class="pl-anim d2">&nbsp;</div>
+    </div>
+    <main class="pl-center">
+        <div class="pl-glass pl-anim d3">
+            <div class="pl-greet pl-anim d4" id="pl-greet">Welcome back</div>
+            <div class="pl-avatar-wrap">
+                <div class="pl-avatar-glow" aria-hidden="true"></div>
+                <div class="pl-avatar-ring" aria-hidden="true"></div>
+                <div class="pl-avatar" aria-hidden="true">💲</div>
+            </div>
+            <div class="pl-user pl-anim d5">Secure Vault</div>
+            <div id="login-panel" class="pl-anim d6">
+                <div class="pl-stack" id="pl-form">
+                    <div class="pl-field"><input type="email" id="acct-email" placeholder="Account email" aria-label="Account email" autocomplete="username" style="padding-right:16px" onkeydown="if(event.key==='Enter') initSession()"></div>
+                    <div class="pl-field"><input type="password" id="acct-pwd" placeholder="Account password" aria-label="Account password" autocomplete="current-password" onkeydown="capsCheck(event); if(event.key==='Enter') initSession()" onkeyup="capsCheck(event)"><button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('acct-pwd')" title="Show/Hide" aria-label="Show or hide Account password" tabindex="-1"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
+                    <div class="pl-form">
+                        <div class="pl-field"><input type="password" id="master-pwd" placeholder="Vault passphrase" aria-label="Vault passphrase" autocomplete="off" onkeydown="capsCheck(event); if(event.key==='Enter') initSession()" onkeyup="capsCheck(event)"><button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('master-pwd')" title="Show/Hide" aria-label="Show or hide Vault passphrase" tabindex="-1"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
+                        <button type="button" id="unlock-btn" class="pl-go" onclick="initSession()" aria-label="Unlock" title="Unlock">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <button type="button" class="pl-linkbtn" onclick="showLoginPanel('forgot')">Forgot your account password?</button>
+            </div>
+            <div id="forgot-panel" class="pl-panel" hidden>
+                <p class="pl-panel-note">Enter your account email and we will send you a link to choose a new password.</p>
+                <div class="pl-stack">
+                    <div class="pl-field"><input type="email" id="reset-email" placeholder="Account email" aria-label="Account email" autocomplete="email" style="padding-right:16px" onkeydown="if(event.key==='Enter') sendResetLink()"></div>
+                    <button type="button" id="reset-btn" class="pl-wide" onclick="sendResetLink()">Send reset link</button>
+                </div>
+                <button type="button" class="pl-linkbtn" onclick="showLoginPanel('login')">← Back to sign in</button>
+            </div>
+            <div id="recovery-panel" class="pl-panel" hidden>
+                <p class="pl-panel-note">Choose a new account password (8+ characters). Your vault passphrase does not change.</p>
+                <div class="pl-stack">
+                    <div class="pl-field"><input type="password" id="new-pwd" placeholder="New password" aria-label="New password" autocomplete="new-password"><button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('new-pwd')" title="Show/Hide" aria-label="Show or hide New password" tabindex="-1"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
+                    <div class="pl-field"><input type="password" id="new-pwd2" placeholder="Repeat new password" aria-label="Repeat new password" autocomplete="new-password" onkeydown="if(event.key==='Enter') submitNewPassword()"></div>
+                    <button type="button" id="recovery-btn" class="pl-wide" onclick="submitNewPassword()">Save new password</button>
+                </div>
+            </div>
+            <div id="pl-caps" class="pl-caps">Caps Lock is on</div>
+            <div id="login-error" class="login-error" role="alert"></div>
+            <div id="login-info" class="login-error login-info" role="status"></div>
+            <p class="pl-hint">The account password opens the cloud. The vault passphrase decrypts your data in this browser and never leaves it.</p>
+        </div>
+    </main>
+    <footer class="pl-bar">
+        <span class="pl-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+            <span>AES-256 encrypted in your browser</span>
+        </span>
+    </footer>
+</div>
+
+<!-- RECURRING TEMPLATES MODAL -->
+<div id="recurring-modal" class="modal-overlay" onclick="if(event.target===this) closeRecurringModal()">
+    <div class="modal-card">
+        <div class="card-header" style="margin-bottom: 16px;">
+            <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg></span>Manage Recurring Templates</h2>
+            <button class="btn-secondary" onclick="closeRecurringModal()">✕ Close</button>
+        </div>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
+            Configure monthly fixed bills or salary entries here. Click <strong>"⚡ Apply to Current Month"</strong> to instantly inject them into your active month's ledger.
+        </p>
+        <div style="display: grid; grid-template-columns: 1.4fr 1.2fr 1fr 74px auto; gap: 8px; margin-bottom: 16px;">
+            <input type="text" id="rec-desc" placeholder="Description (e.g. Rent)">
+            <select id="rec-cat">
+                <option value="">-- Expense Cat --</option>
+            </select>
+            <input type="number" step="0.01" id="rec-amount" placeholder="Amount ($)">
+            <input type="number" id="rec-day" min="1" max="31" placeholder="Day" aria-label="Day of the month it is due">
+            <button class="btn" onclick="addRecurringTemplate()">+ Add</button>
+        </div>
+        <div class="table-container-clean" style="margin-bottom: 16px;">
+            <table>
+                <thead><tr><th>Description</th><th>Category</th><th style="width: 60px; text-align: center;">Day</th><th class="col-num">Amount ($)</th><th style="width: 70px; text-align: center;">Action</th></tr></thead>
+                <tbody id="recurring-tbody"></tbody>
+            </table>
+        </div>
+        <label class="rec-auto"><input type="checkbox" id="rec-auto" onchange="toggleAutoRecurring(this.checked)">
+            <span><strong>Auto-add each month</strong><br>When you unlock the app, bills whose day has arrived are added to the current month as Pending. A line you delete is not added again.</span>
+        </label>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button class="btn" onclick="applyRecurringToActiveMonth()">⚡ Apply Templates to Active Month</button>
+        </div>
+    </div>
+</div>
+
+<!-- NEW TRANSACTION MODAL -->
+<div id="txn-modal" class="modal-overlay" onclick="if(event.target===this) closeTransactionModal()">
+    <div class="modal-card modal-sm" role="dialog" aria-modal="true" aria-labelledby="txn-modal-title">
+        <div class="modal-head">
+            <h3 id="txn-modal-title">New Transaction</h3>
+            <button type="button" class="modal-close" onclick="closeTransactionModal()" aria-label="Close">✕</button>
+        </div>
+        <div class="form-field">
+            <label for="tm-desc">Description</label>
+            <input type="text" id="tm-desc" placeholder="e.g. Whole Foods Market" autocomplete="off" oninput="onTxnDescInput()" onkeydown="if(event.key==='Enter') saveTransactionFromModal()">
+        </div>
+        <div class="form-row">
+            <div class="form-field">
+                <label for="tm-amount">Amount ($)</label>
+                <input type="number" id="tm-amount" step="0.01" min="0" inputmode="decimal" placeholder="45.00" onkeydown="if(event.key==='Enter') saveTransactionFromModal()">
+            </div>
+            <div class="form-field">
+                <label for="tm-type">Type</label>
+                <select id="tm-type" onchange="onTxnTypeChange()">
+                    <option value="expense">Expense</option>
+                    <option value="credit">Credit</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-field">
+                <label for="tm-cat">Category</label>
+                <select id="tm-cat" onchange="txmCatTouched = true"></select>
+            </div>
+            <div class="form-field">
+                <label for="tm-date">Date</label>
+                <input type="date" id="tm-date" onchange="updateTxnModalSummary()" oninput="updateTxnModalSummary()" onkeydown="if(event.key==='Enter') saveTransactionFromModal()">
+            </div>
+        </div>
+        <div class="tm-paid-row">
+            <div class="paid-toggle" title="Switch on if this line is already paid / received">
+                <input type="checkbox" id="tm-paid" role="switch" aria-label="Mark as paid">
+                <span class="pt-track"><span class="pt-knob"></span></span>
+            </div>
+            <label for="tm-paid" class="tm-paid-label"><strong>Mark as paid</strong><small>Off = Pending. On = already paid (or received).</small></label>
+        </div>
+        <div class="tm-summary">
+            <div class="tm-sum-head"><span>Period Summary (Cleared)</span><span id="tm-sum-month">--</span></div>
+            <div class="tm-sum-grid">
+                <div><small>Credits Received</small><b id="tm-sum-cr" class="text-success">$0.00</b></div>
+                <div><small>Debits Paid</small><b id="tm-sum-db" class="text-danger">$0.00</b></div>
+                <div><small>Debits to Pay</small><b id="tm-sum-topay">$0.00</b></div>
+                <div><small>Current Balance</small><b id="tm-sum-bal">$0.00</b></div>
+            </div>
+            <p class="tm-sum-note">Pending lines count here once they are marked Paid (use the switch above or the ledger).</p>
+        </div>
+        <div class="modal-actions">
+            <label class="tm-again"><input type="checkbox" id="tm-again"> Add another</label>
+            <button type="button" class="btn-secondary" onclick="closeTransactionModal()">Cancel</button>
+            <button type="button" class="btn" onclick="saveTransactionFromModal()">Save Transaction</button>
+        </div>
+    </div>
+</div>
+
+<!-- NEW / EDIT BUDGET MODAL (with 3-month average suggestion) -->
+<div id="budget-modal" class="modal-overlay" onclick="if(event.target===this) closeBudgetModal()">
+    <div class="modal-card modal-sm" role="dialog" aria-modal="true" aria-labelledby="budget-modal-title">
+        <div class="modal-head">
+            <h3 id="budget-modal-title">New Budget</h3>
+            <button type="button" class="modal-close" onclick="closeBudgetModal()" aria-label="Close">✕</button>
+        </div>
+        <div class="form-field">
+            <label for="bm-cat">Category</label>
+            <select id="bm-cat" onchange="onBudgetCatChange()"></select>
+        </div>
+        <div class="form-field">
+            <label for="bm-limit">Budget limit ($)</label>
+            <input type="number" id="bm-limit" step="10" min="0" inputmode="decimal" placeholder="e.g. 600.00" onkeydown="if(event.key==='Enter') saveBudgetFromModal()">
+        </div>
+        <p class="modal-note" id="bm-note"></p>
+        <div class="bm-hint" id="bm-avg-hint" style="display: none;">
+            <span>You spent an average of <strong id="bm-avg-val">$0</strong> per month here over the last 3 months.</span>
+            <button type="button" class="btn" style="height: 30px; padding: 0 12px; font-size: 0.76rem; border-radius: 8px;" onclick="useAvgAsBudget()">Use average</button>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeBudgetModal()">Cancel</button>
+            <button type="button" class="btn" onclick="saveBudgetFromModal()">Save Budget</button>
+        </div>
+    </div>
+</div>
+
+<!-- SECURITY MODAL: change vault passphrase / account password -->
+<div id="security-modal" class="modal-overlay" onclick="if(event.target===this) closeSecurityModal()">
+    <div class="modal-card modal-sm" role="dialog" aria-modal="true" aria-labelledby="security-modal-title">
+        <div class="modal-head">
+            <h3 id="security-modal-title">Security</h3>
+            <button type="button" class="modal-close" onclick="closeSecurityModal()" aria-label="Close">✕</button>
+        </div>
+        <div class="sec-section">
+            <h4>Change vault passphrase</h4>
+            <p class="modal-note">Re-encrypts all your data with a new passphrase. Write the new one down: if it is lost, nobody can recover your data.</p>
+            <div class="form-field"><label for="sp-old">Current passphrase</label><input type="password" id="sp-old" autocomplete="off"></div>
+            <div class="form-field"><label for="sp-new">New passphrase (10+ characters)</label><input type="password" id="sp-new" autocomplete="new-password"></div>
+            <div class="form-field"><label for="sp-new2">Repeat new passphrase</label><input type="password" id="sp-new2" autocomplete="new-password" onkeydown="if(event.key==='Enter') changeVaultPassphrase()"></div>
+            <label class="sec-check"><input type="checkbox" id="sp-backup" checked> Download a backup file first (recommended)</label>
+            <div id="sp-msg" class="sec-msg" role="status"></div>
+            <div class="modal-actions"><button type="button" class="btn" id="sp-btn" onclick="changeVaultPassphrase()">Change passphrase</button></div>
+        </div>
+        <div class="sec-section">
+            <h4>Change account password</h4>
+            <p class="modal-note">The password you use to sign in to the cloud account. Your vault passphrase is not affected.</p>
+            <div class="form-field"><label for="ap-old">Current account password</label><input type="password" id="ap-old" autocomplete="current-password"></div>
+            <div class="form-field"><label for="ap-new">New account password (8+ characters)</label><input type="password" id="ap-new" autocomplete="new-password"></div>
+            <div class="form-field"><label for="ap-new2">Repeat new account password</label><input type="password" id="ap-new2" autocomplete="new-password" onkeydown="if(event.key==='Enter') changeAccountPassword()"></div>
+            <div id="ap-msg" class="sec-msg" role="status"></div>
+            <div class="modal-actions"><button type="button" class="btn" id="ap-btn" onclick="changeAccountPassword()">Change account password</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="container" id="main-app" style="display: none;">
+    <div class="app-shell">
+    <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="closeSidebar()"></div>
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+        <div class="nav-brand"><span class="nav-brand-logo" aria-hidden="true">💲</span><div><strong>Secure Vault</strong><small>Financial Dashboard</small></div></div>
+        <nav class="nav">
+            <button type="button" class="nav-item active" data-view="dashboard" onclick="showView('dashboard')" aria-current="page">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9v12h14V9"></path><path d="M10 21v-6h4v6"></path></svg>
+                <span>Dashboard</span>
+                <span class="nav-badge" id="nav-due-dash" hidden></span>
+            </button>
+            <button type="button" class="nav-item" data-view="transactions" onclick="showView('transactions')">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></svg>
+                <span>Transactions</span>
+                <span class="nav-badge" id="nav-due-tx" hidden></span>
+            </button>
+            <div class="nav-group">
+                <button type="button" class="nav-item nav-parent" aria-expanded="false" onclick="toggleNavGroup(this)">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+                    <span>Analytics</span>
+                    <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                </button>
+                <div class="nav-sub-list"><div class="nav-sub-inner">
+                    <button type="button" class="nav-sub" data-view="annual" onclick="showView('annual')">Annual Summary</button>
+                    <button type="button" class="nav-sub" data-view="multiyear" onclick="showView('multiyear')">Multi-Year Comparison</button>
+                    <button type="button" class="nav-sub" data-view="trend" onclick="showView('trend')">Month vs Last Month</button>
+                </div></div>
+            </div>
+            <button type="button" class="nav-item" data-view="budgets" onclick="showView('budgets')">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                <span>Budgets</span>
+            </button>
+            <div class="nav-group">
+                <button type="button" class="nav-item nav-parent" aria-expanded="false" onclick="toggleNavGroup(this)">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+                    <span>Planning</span>
+                    <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                </button>
+                <div class="nav-sub-list"><div class="nav-sub-inner">
+                    <button type="button" class="nav-sub" data-view="forecast" onclick="showView('forecast')">Cash-Flow Forecast</button>
+                    <button type="button" class="nav-sub" data-view="goals" onclick="showView('goals')">Savings Goals</button>
+                    <button type="button" class="nav-sub" data-view="subscriptions" onclick="showView('subscriptions')">Subscriptions &amp; Bills</button>
+                </div></div>
+            </div>
+        </nav>
+        <div class="nav-footer">
+            <button type="button" class="nav-item" onclick="lockVault()">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+                <span>Lock vault</span>
+            </button>
+        </div>
+    </aside>
+    <div class="app-main">
+    <header>
+        <div class="header-top-row">
+            <div class="header-left">
+            <button type="button" class="icon-btn-tooltip menu-toggle" onclick="toggleSidebar()" aria-label="Menu"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+            <div class="dropdown">
+                <button class="btn btn-secondary" style="padding: 8px 12px;" onclick="toggleDropdown(event)">⚙️ Options ▾</button>
+                <div id="options-dropdown" class="dropdown-content">
+                    <button onclick="closeOptionsDropdown(); openRecurringModal()">🔄 Recurring Templates</button>
+                    <button id="due-days-btn" onclick="closeOptionsDropdown(); cycleDueDays()">⏰ Due-soon alert: 5 days</button>
+                    <button onclick="closeOptionsDropdown(); sortTransactionsByDateManual()">📅 Sort by Date</button>
+                    <button onclick="closeOptionsDropdown(); copyFromPreviousMonth('fixed')">📋 Copy Last Month's Fixed Lines</button>
+                    <button onclick="closeOptionsDropdown(); copyFromPreviousMonth('all')">📋 Copy All of Last Month</button>
+                    <button onclick="closeOptionsDropdown(); exportJSON()">💾 Backup JSON</button>
+                    <button onclick="closeOptionsDropdown(); exportEncryptedBackup()">🔐 Encrypted Backup</button>
+                    <button onclick="closeOptionsDropdown(); exportCSV()">📄 Export Month (CSV)</button>
+                    <button onclick="closeOptionsDropdown(); printReport()">🖨️ Print / Save Report (PDF)</button>
+                    <label style="cursor: pointer;">
+                        📂 Import JSON <input type="file" id="import-file" style="display: none;" accept=".json,.enc,.txt" onchange="closeOptionsDropdown(); importJSON(event)">
+                    </label>
+                    <button onclick="closeOptionsDropdown(); openSecurityModal()">🔑 Security (passwords)</button>
+                    <button onclick="closeOptionsDropdown(); resetMonthData()">🔄 Reset Month</button>
+                </div>
+            </div>
+            </div>
+            <div class="header-title" style="flex: 1; text-align: center;">
+                <h1 id="app-title-header">Financial Movement Dashboard</h1>
+                <div class="header-sub">🔒 Encrypted · Synced to cloud</div>
+            </div>
+            <div class="header-controls-row">
+                <div class="sync-wrap">
+                    <button class="icon-btn-tooltip" id="sync-btn" onclick="refreshFromCloud()" aria-label="Sync">🔄</button>
+                    <span class="sync-status" id="sync-status"></span>
+                    <label class="fx-toggle" title="Glass effects: blur, moving glow and hover lift. Turn off for a lighter, faster page.">
+                        <input type="checkbox" id="fx-toggle" role="switch" aria-label="Glass effects" checked onchange="setFx(this.checked)">
+                        <span class="fx-track"><span class="fx-knob"></span></span>
+                        <span class="fx-text">Glass</span>
+                    </label>
+                </div>
+                <button class="icon-btn-tooltip" onclick="testDatabaseConnection()" aria-label="Test DB">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                </button>
+                <button class="icon-btn-tooltip" id="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle Theme">☀</button>
+                <button class="icon-btn-tooltip" onclick="lockVault()" aria-label="Lock">🔒</button>
+            </div>
+        </div>
+        <div class="header-actions">
+            <select id="year-dropdown" class="select-picker" style="width: 140px;" onchange="switchYear(this.value)">
+                <option value="2025">🗓️ 2025</option>
+                <option value="2026" selected>🗓️ 2026</option>
+                <option value="2027">🗓️ 2027</option>
+                <option value="2028">🗓️ 2028</option>
+                <option value="2029">🗓️ 2029</option>
+                <option value="2030">🗓️ 2030</option>
+            </select>
+            <div id="month-nav" class="month-nav">
+            <button class="icon-btn-tooltip" onclick="changeMonth(-1)" aria-label="Previous month">‹</button>
+            <select id="month-dropdown" class="select-picker" style="width: 250px;" onchange="switchMonth(this.value)">
+                <option value="january">📅 January</option>
+                <option value="february">📅 February</option>
+                <option value="march">📅 March</option>
+                <option value="april">📅 April</option>
+                <option value="may">📅 May</option>
+                <option value="june">📅 June</option>
+                <option value="july">📅 July</option>
+                <option value="august">📅 August</option>
+                <option value="september" selected>📅 September</option>
+                <option value="october">📅 October</option>
+                <option value="november">📅 November</option>
+                <option value="december">📅 December</option>
+            </select>
+            <button class="icon-btn-tooltip" onclick="changeMonth(1)" aria-label="Next month">›</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MONTHLY TREND VIEW -->
+    <div id="monthly-trend-view" class="view-pane" style="display: none;">
+        <div class="mv-head">
+            <div>
+                <h2 class="mv-title" id="mv-title">Month vs Last Month</h2>
+                <div class="mv-sub" id="mv-sub">&nbsp;</div>
+            </div>
+            <div class="seg-pills" id="mv-mode" role="group" aria-label="Comparison basis" style="display: none;">
+                <button type="button" class="pill active" data-mode="same" onclick="setMvMode('same')">Same point of month</button>
+                <button type="button" class="pill" data-mode="full" onclick="setMvMode('full')">Full previous month</button>
+            </div>
+        </div>
+        <div id="mv-body"></div>
+    </div>
+
+    <!-- MULTI-YEAR VIEW -->
+    <div id="multi-year-view" class="view-pane" style="display: none;">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3>Multi-Year Financial Trend (2025 - 2030)</h3>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Comparing Annual Income vs Spends vs Net Savings</span>
+            </div>
+            <div id="multi-year-bar-chart" class="multi-year-bar-grid"></div>
+            <div class="chart-legend">
+                <div class="legend-item"><div class="legend-dot" style="background: var(--success);"></div> Annual Income</div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--danger);"></div> Annual Spends</div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--accent);"></div> Net Savings</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M3 15h18M9 3v18"></path></svg></span>Multi-Year Summary Table</h2>
+            </div>
+            <div class="table-container-clean">
+                <table>
+                    <thead><tr><th>Year</th><th class="col-num">Total Income ($)</th><th class="col-num">Total Spends ($)</th><th class="col-num">Net Savings ($)</th><th class="col-num">Avg Monthly Spend ($)</th></tr></thead>
+                    <tbody id="multi-year-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORECAST VIEW -->
+    <div id="forecast-view" class="view-pane" style="display: none;">
+        <div class="annual-grid">
+            <div class="stat-card">
+                <span class="stat-card-title">Balance Today</span>
+                <span id="fc-today" class="stat-card-value">$0.00</span>
+                <span class="stat-card-sub">Cleared money this month</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-title" id="fc-end-title">Balance in 30 Days</span>
+                <span id="fc-end" class="stat-card-value">$0.00</span>
+                <span class="stat-card-sub" id="fc-end-sub">&nbsp;</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-title">Lowest Point</span>
+                <span id="fc-low" class="stat-card-value">$0.00</span>
+                <span class="stat-card-sub" id="fc-low-date">--</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-title">Safe to Spend Now</span>
+                <span id="fc-safe" class="stat-card-value" style="color: var(--accent);">$0.00</span>
+                <span class="stat-card-sub">Without dipping below $0 in this window</span>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 7-8.5 8.5-5-5L2 17"></path><path d="M16 7h6v6"></path></svg></span>Cash-Flow Forecast</h2>
+                <div class="seg-pills" id="fc-pills">
+                    <div class="pill" data-days="14" onclick="setForecastDays(14)">14 days</div>
+                    <div class="pill active" data-days="30" onclick="setForecastDays(30)">30 days</div>
+                    <div class="pill" data-days="60" onclick="setForecastDays(60)">60 days</div>
+                    <div class="pill" data-days="90" onclick="setForecastDays(90)">90 days</div>
+                </div>
+            </div>
+            <div id="fc-banner" class="fc-banner ok"></div>
+            <div id="forecast-chart" class="fc-chart-wrap"></div>
+            <div class="chart-legend">
+                <div class="legend-item"><div class="legend-dot" style="background: var(--accent);"></div> Projected balance</div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--success);"></div> Money in</div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--danger);"></div> Money out</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span>Upcoming Money Movements</h2>
+                <span id="fc-count" class="chip">0 items</span>
+            </div>
+            <div class="table-container-scrollable" style="max-height: 440px;">
+                <table class="data-table-auto">
+                    <thead><tr><th>Date</th><th>What</th><th>Source</th><th class="col-num">Amount</th><th class="col-num">Balance After</th></tr></thead>
+                    <tbody id="forecast-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUBSCRIPTIONS VIEW (toggle replaces Pause/Resume) -->
+    <div id="subs-view" class="view-pane" style="display: none;">
+        <div class="annual-grid">
+            <div class="stat-card">
+                <span class="stat-card-title">Monthly Cost</span>
+                <span id="subs-monthly" class="stat-card-value">$0.00</span>
+                <span class="stat-card-sub">Active subscriptions &amp; bills</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-title">Yearly Cost</span>
+                <span id="subs-yearly" class="stat-card-value" style="color: var(--accent);">$0.00</span>
+                <span class="stat-card-sub" id="subs-yearly-sub">&nbsp;</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-title">Active</span>
+                <span id="subs-count" class="stat-card-value">0</span>
+                <span class="stat-card-sub" id="subs-paused">&nbsp;</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-title">Next Due</span>
+                <span id="subs-next" class="stat-card-value" style="font-size: 1.25rem;">--</span>
+                <span class="stat-card-sub" id="subs-next-date">&nbsp;</span>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span>Add a Subscription or Recurring Bill</h2>
+            </div>
+            <div class="subs-form">
+                <input type="text" id="sub-name" placeholder="Name (e.g. Netflix)" aria-label="Name" onkeydown="if(event.key==='Enter') addSubscription()">
+                <input type="number" step="0.01" id="sub-amount" placeholder="Amount ($)" aria-label="Amount">
+                <select id="sub-cycle" aria-label="Billing cycle">
+                    <option value="monthly">Monthly</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="fortnightly">Fortnightly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="yearly">Yearly</option>
+                </select>
+                <input type="date" id="sub-next" title="Next (or any past) due date" aria-label="Next due date">
+                <select id="sub-cat" aria-label="Expense category"></select>
+                <button class="btn" onclick="addSubscription()">+ Add</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg></span>Tracked Subscriptions</h2>
+            </div>
+            <div class="table-container-clean">
+                <table class="data-table-auto">
+                    <thead><tr><th>Name</th><th>Category</th><th>Cycle</th><th class="col-num">Amount</th><th class="col-num">Per Month</th><th class="col-num">Per Year</th><th>Next Due</th><th style="text-align: center;">Actions</th></tr></thead>
+                    <tbody id="subs-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></span>Detected in Your Ledger</h2>
+                <span class="chip">Repeating charges you are not tracking yet</span>
+            </div>
+            <div id="subs-suggestions" class="suggest-list"></div>
+        </div>
+    </div>
+
+    <!-- SAVINGS GOALS VIEW -->
+    <div id="goals-view" class="view-pane" style="display: none;">
+        <div class="annual-grid">
+            <div class="stat-card">
+                <span class="stat-card-title">Total Saved</span>
+                <span id="goals-total-saved" class="stat-card-value text-success">$0.00</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-title">Total Target</span>
+                <span id="goals-total-target" class="stat-card-value">$0.00</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-title">Needed Per Month</span>
+                <span id="goals-needed" class="stat-card-value" style="color: var(--accent);">$0.00</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-title" id="goals-avg-title">Avg Net Savings / Month</span>
+                <span id="goals-avg" class="stat-card-value">$0.00</span>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><path d="M4 22v-7"></path></svg></span>Add a Goal</h2>
+                <span id="goals-status" class="chip">No goals yet</span>
+            </div>
+            <div class="goal-form">
+                <input type="text" id="goal-name" placeholder="Goal name (e.g. Emergency fund)" aria-label="Goal name" onkeydown="if(event.key==='Enter') addGoal()">
+                <input type="number" step="0.01" id="goal-target" placeholder="Target ($)" aria-label="Target amount">
+                <input type="number" step="0.01" id="goal-saved" placeholder="Saved so far ($)" aria-label="Already saved">
+                <input type="date" id="goal-deadline" title="Target date (optional)" aria-label="Target date">
+                <button class="btn" onclick="addGoal()">+ Add Goal</button>
+            </div>
+        </div>
+        <div id="goals-list" class="goals-grid"></div>
+    </div>
+
+    <!-- ANNUAL SUMMARY VIEW -->
+    <div id="annual-view" class="view-pane" style="display: none;">
+        <div class="annual-grid">
+            <div class="stat-card">
+                <span class="stat-card-title">Total Annual Income</span>
+                <span id="ann-total-income" class="stat-card-value text-success">$0.00</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-title">Total Annual Spends</span>
+                <span id="ann-total-spends" class="stat-card-value text-danger">$0.00</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-title">Net Annual Savings</span>
+                <span id="ann-net-savings" class="stat-card-value">$0.00</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-title">Monthly Average Spend</span>
+                <span id="ann-avg-spend" class="stat-card-value" style="color: var(--accent);">$0.00</span>
+            </div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 id="annual-chart-title">Monthly Income vs Spends Performance</h3>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Hover bars for exact figures</span>
+            </div>
+            <div id="annual-bar-chart" class="bar-chart-grid"></div>
+            <div class="chart-legend">
+                <div class="legend-item"><div class="legend-dot" style="background: var(--success);"></div> Income / Credits</div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--danger);"></div> Expenses / Spends</div>
+            </div>
+        </div>
+        <div class="breakdowns-grid">
+            <div class="card" style="margin-bottom: 0;">
+                <div class="card-header">
+                    <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"></path><path d="M3 6h.01M3 12h.01M3 18h.01"></path></svg></span>Top 20 Expense Categories</h2>
+                </div>
+                <div class="table-container-annual-cats">
+                    <table>
+                        <thead><tr><th>Category</th><th class="col-num">Total Spent ($)</th><th style="padding-left: 12px;">Share</th></tr></thead>
+                        <tbody id="annual-categories-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card" style="margin-bottom: 0;">
+                <div class="card-header">
+                    <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span>Annual Breakdown by Month</h2>
+                </div>
+                <div class="table-container-clean">
+                    <table>
+                        <thead><tr><th>Month</th><th class="col-num">Income ($)</th><th class="col-num">Spent ($)</th><th class="col-num">Net Diff ($)</th></tr></thead>
+                        <tbody id="annual-months-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD VIEW (YTD upgrade + swapped breakdown cards) -->
+    <div id="dashboard-view" class="view-pane" style="display: none;">
+        <div class="page-head">
+            <div class="page-head-title">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg></span>Dashboard Overview</h2>
+                <span class="chip" id="ov-month">--</span>
+            </div>
+            <button type="button" class="btn" onclick="openTransactionModal()">+ Add Transaction</button>
+        </div>
+        <div id="ov-due"></div>
+        <div class="ov-alerts" id="ov-alerts"></div>
+        <div class="ov-stats">
+            <div class="stat-card">
+                <div class="ov-stat-top">
+                    <span class="stat-card-title">Total Balance<button type="button" class="help" data-help="The money you have right now. It only counts lines marked Paid, starting from last month's closing balance." aria-label="What is Total Balance?">?</button></span>
+                    <span class="ov-ico ov-ico-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></svg></span>
+                </div>
+                <div class="stat-card-value" id="ov-balance">$0.00</div>
+                <div class="ov-trend" id="ov-balance-trend"></div>
+            </div>
+            <div class="stat-card">
+                <div class="ov-stat-top">
+                    <span class="stat-card-title">Monthly Income<button type="button" class="help" data-help="Everything you earn this month (wages and other credits), including income that has not arrived yet." aria-label="What is Monthly Income?">?</button></span>
+                    <span class="ov-ico ov-ico-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg></span>
+                </div>
+                <div class="stat-card-value" id="ov-income">$0.00</div>
+                <div class="ov-trend" id="ov-income-trend"></div>
+            </div>
+            <div class="stat-card">
+                <div class="ov-stat-top">
+                    <span class="stat-card-title">Monthly Expenses<button type="button" class="help" data-help="Everything you spend this month, paid or not yet paid. Green means you are spending less than last month, red means more." aria-label="What is Monthly Expenses?">?</button></span>
+                    <span class="ov-ico ov-ico-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"></path><path d="m5 12 7-7 7 7"></path></svg></span>
+                </div>
+                <div class="stat-card-value" id="ov-expenses">$0.00</div>
+                <div class="ov-trend" id="ov-expenses-trend"></div>
+            </div>
+            <div class="stat-card">
+                <div class="ov-stat-top">
+                    <span class="stat-card-title">Projected Balance<button type="button" class="help" data-help="Where your balance should end up once every Pending line is settled: your balance now, plus income still to arrive, minus bills still to pay." aria-label="What is Projected Balance?">?</button></span>
+                    <span class="ov-ico ov-ico-violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 7-8.5 8.5-5-5L2 17"></path><path d="M16 7h6v6"></path></svg></span>
+                </div>
+                <div class="stat-card-value" id="ov-proj">$0.00</div>
+                <div class="ov-trend" id="ov-proj-trend"></div>
+            </div>
+        </div>
+        <div class="card ov-ytd-card ov-month-card">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path><path d="m9 15 2 2 4-4"></path></svg></span>This Month<button type="button" class="help" data-help="How the month you are viewing is going. Earned and Spent include lines still marked Pending." aria-label="What is This Month?">?</button></h2>
+                <span class="chip" id="mo-month">--</span>
+            </div>
+            <div class="ov-ytd">
+                <div class="ov-ytd-item"><span class="lbl">Earned<button type="button" class="help" data-help="All the income for this month: money you have already received plus money you are still expecting." aria-label="What is Earned?">?</button></span><b id="mo-earned">$0.00</b><small id="mo-earned-sub"></small></div>
+                <div class="ov-ytd-item"><span class="lbl">Spent<button type="button" class="help" data-help="All the spending for this month: bills you have already paid plus bills still waiting to be paid." aria-label="What is Spent?">?</button></span><b id="mo-spent">$0.00</b><small id="mo-spent-sub"></small></div>
+                <div class="ov-ytd-item"><span class="lbl">Left Over<button type="button" class="help" data-help="What is left after spending: Earned minus Spent. Green means you are ahead. Red means you have spent more than you earn." aria-label="What is Left Over?">?</button></span><b id="mo-left">$0.00</b><small id="mo-left-sub"></small></div>
+                <div class="ov-ytd-item"><span class="lbl">Savings Rate<button type="button" class="help" data-help="The share of this month's income that you keep: Left Over divided by Earned. 20% or more is great." aria-label="What is Savings Rate?">?</button></span><b id="mo-rate">--</b><small id="mo-rate-sub"></small></div>
+            </div>
+            <div class="mo-summary" id="mo-summary"></div>
+            <div class="mo-bar">
+                <div class="mo-bar-top"><span>Share of your income spent</span><span id="mo-bar-pct">--</span></div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="mo-bar-fill" style="width: 0%"></div></div>
+            </div>
+            <p class="mo-note" id="mo-note"></p>
+        </div>
+        <div class="card ov-ytd-card">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 7-8.5 8.5-5-5L2 17"></path><path d="M16 7h6v6"></path></svg></span>Year to Date<button type="button" class="help" data-help="Everything you have entered for the year shown, from January until now. Months with nothing entered are skipped, so they do not pull the numbers down." aria-label="What is Year to Date?">?</button></h2>
+                <span class="chip" id="ytd-year">--</span>
+            </div>
+            <div class="ov-ytd">
+                <div class="ov-ytd-item"><span class="lbl">Earned<button type="button" class="help" data-help="All the income you have entered this year, including income still marked Pending. Opening balances carried over from the year before are not counted." aria-label="What is Earned this year?">?</button></span><b id="ytd-income">$0.00</b><small id="ytd-income-sub"></small></div>
+                <div class="ov-ytd-item"><span class="lbl">Spent<button type="button" class="help" data-help="All the spending you have entered this year, paid or not yet paid." aria-label="What is Spent this year?">?</button></span><b id="ytd-expenses">$0.00</b><small id="ytd-expenses-sub"></small></div>
+                <div class="ov-ytd-item"><span class="lbl">Left Over<button type="button" class="help" data-help="Earned minus Spent for the year. Green means you are ahead for the year. Red means you have spent more than you earned." aria-label="What is Left Over this year?">?</button></span><b id="ytd-net">$0.00</b><small id="ytd-net-sub"></small></div>
+                <div class="ov-ytd-item"><span class="lbl">Savings Rate<button type="button" class="help" data-help="The share of this year's income that you kept: Left Over divided by Earned. 20% or more is great, 10 to 20% is healthy, under 10% is low, and below 0% means you are overspending." aria-label="What is Savings Rate this year?">?</button></span><b id="ytd-rate">--</b><small id="ytd-rate-sub"></small></div>
+            </div>
+            <div class="mo-summary" id="ytd-summary"></div>
+            <div class="mo-bar">
+                <div class="mo-bar-top"><span>Share of your income spent</span><span id="ytd-bar-pct">--</span></div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="ytd-bar-fill" style="width: 0%"></div></div>
+            </div>
+            <p class="mo-note" id="ytd-note"></p>
+        </div>
+        <div class="ov-charts">
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg></span>Cash Flow Overview<button type="button" class="help" data-help="Income (green) and expenses (red) for each of the last few months. Hover a bar to see the exact amounts." aria-label="What is Cash Flow Overview?">?</button></h2>
+                    <select id="cf-range" class="ov-select" onchange="renderOverview()" aria-label="Cash flow period">
+                        <option value="3">Last 3 Months</option>
+                        <option value="6" selected>Last 6 Months</option>
+                        <option value="12">Last 12 Months</option>
+                    </select>
+                </div>
+                <div class="cf-chart">
+                    <div class="cf-axis" id="cf-axis"></div>
+                    <div class="cf-area">
+                        <div class="cf-grid" id="cf-grid"></div>
+                        <div class="cf-cols" id="cf-cols"></div>
+                    </div>
+                    <div></div>
+                    <div class="cf-labels" id="cf-labels"></div>
+                </div>
+                <div class="cf-legend">
+                    <span class="keys">
+                        <span class="key"><i class="inc"></i>Income</span>
+                        <span class="key"><i class="exp"></i>Expenses</span>
+                    </span>
+                    <span id="cf-net"></span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg></span>Expenses by Category<button type="button" class="help" data-help="Where this month's spending went: your five biggest categories, with the rest grouped as Other." aria-label="What is Expenses by Category?">?</button></h2>
+                </div>
+                <div class="dn-wrap">
+                    <div class="dn-ring" id="dn-ring" role="img" aria-label="Expenses by category">
+                        <div class="dn-hole"><strong id="dn-total">$0.00</strong><span>Total spent</span></div>
+                    </div>
+                    <ul class="dn-legend" id="dn-legend"></ul>
+                </div>
+            </div>
+        </div>
+        <div class="ov-bottom">
+        <div class="card">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 17.5v-11"></path></svg></span>Recent Transactions<button type="button" class="help" data-help="The latest lines of the month that have already happened. Click Paid or Pending to switch a line. Upcoming bills are in the warning and Next 7 Days." aria-label="What is Recent Transactions?">?</button></h2>
+                <button type="button" class="ov-link" onclick="showView('transactions')">View All <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg></button>
+            </div>
+            <div class="table-container-clean">
+                <table class="ov-table">
+                    <thead><tr><th>Description</th><th class="hide-sm">Category</th><th class="hide-sm">Date</th><th class="hide-sm">Status</th><th class="col-num">Amount</th></tr></thead>
+                    <tbody id="ov-recent-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="ov-side">
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path><path d="M8 14h.01M12 14h.01M16 14h.01"></path></svg></span>Next 7 Days<button type="button" class="help" data-help="Bills and income due in the next week, taken from your Pending lines and your subscriptions. Overdue items come first." aria-label="What is Next 7 Days?">?</button></h2>
+                    <button type="button" class="ov-link" onclick="showView('forecast')">Forecast</button>
+                </div>
+                <div id="ov-upcoming"></div>
+                <div class="ov-up-foot" id="ov-upcoming-foot"></div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><path d="M4 22v-7"></path></svg></span>Savings Goals<button type="button" class="help" data-help="Progress towards the goals you set on the Savings Goals page." aria-label="What is Savings Goals?">?</button></h2>
+                    <button type="button" class="ov-link" onclick="showView('goals')">View All</button>
+                </div>
+                <div id="ov-goals"></div>
+            </div>
+        </div>
+        </div>
+        <div class="section-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 10 5-10 5L2 7z"></path><path d="m2 17 10 5 10-5"></path><path d="m2 12 10 5 10-5"></path></svg>Monthly Details</div>
+        <div class="dashboard-grid">
+        <div>
+            <div class="breakdowns-grid">
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="card-header">
+                        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg></span>Cost Breakdown</h2>
+                    </div>
+                    <div class="table-container-clean">
+                        <table>
+                            <thead><tr><th>Category</th><th class="col-num">Spent ($)</th><th style="padding-left: 12px;">Budget / Share</th></tr></thead>
+                            <tbody id="category-tbody"></tbody>
+                            <tfoot id="category-tfoot"></tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="card-header">
+                        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg></span>Spending vs 3-Month Average</h2>
+                    </div>
+                    <div id="cmp-body"></div>
+                </div>
+            </div>
+            <div class="breakdowns-grid">
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="card-header">
+                        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg></span>Credits Breakdown</h2>
+                    </div>
+                    <div class="table-container-clean">
+                        <table>
+                            <thead><tr><th>Category</th><th class="col-num">Received ($)</th><th style="padding-left: 12px;">Share</th></tr></thead>
+                            <tbody id="credits-breakdown-tbody"></tbody>
+                            <tfoot id="credits-breakdown-tfoot"></tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="card-header">
+                        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></svg></span>Payment Methods</h2>
+                    </div>
+                    <div class="table-container-clean">
+                        <table>
+                            <thead><tr><th>Method</th><th class="col-num">Total ($)</th><th style="padding-left: 12px;">Share</th></tr></thead>
+                            <tbody id="methods-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+        <div class="card">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path><path d="m9 16 2 2 4-4"></path></svg></span>Period Summary (Cleared)<button type="button" class="help" data-help="Only lines marked Paid count here (cleared). Debits to Pay are Pending bills still waiting to be paid." aria-label="What is Period Summary?">?</button></h2>
+            </div>
+            <div class="metric-group">
+                <div class="metric-row"><span>Credits Received:</span> <span id="lbl-credits-rcvd" class="text-success">$0.00</span></div>
+                <div class="metric-row"><span>Debits Paid:</span> <span id="lbl-debits-paid" class="text-danger">$0.00</span></div>
+                <div class="metric-row"><span>Debits to Pay:</span> <span id="lbl-ps-debits-topay">$0.00</span></div>
+                <div class="highlight-box">
+                    <div class="metric-row"><span>Current Balance:</span><span id="lbl-curr-bal">$0.00</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg></span>Pending &amp; Projected<button type="button" class="help" data-help="What is still waiting: Pending income, Pending bills, and the balance you should end up with once they are all settled." aria-label="What is Pending &amp; Projected?">?</button></h2>
+            </div>
+            <div class="metric-group">
+                <div class="metric-row"><span>Credits to Receive:</span> <span id="lbl-credits-recv">$0.00</span></div>
+                <div class="metric-row"><span>Debits to Pay:</span> <span id="lbl-debits-pay">$0.00</span></div>
+                <div class="highlight-box">
+                    <div class="metric-row"><span>Projected Balance:</span><span id="lbl-proj-bal">$0.00</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg></span>Budget Health</h2>
+            </div>
+            <div class="metric-group">
+                <div class="metric-row"><span>Budget limits (total):</span> <span id="bh-budget">$0.00</span></div>
+                <div class="metric-row"><span>Spent in budgeted categories:</span> <span id="bh-spent">$0.00</span></div>
+                <div class="metric-row"><span>Left in budgets:</span> <span id="bh-left">$0.00</span></div>
+                <div class="divider"></div>
+                <div class="metric-row"><span>Savings rate (month):</span> <span id="bh-rate">--</span></div>
+                <div class="metric-row"><span>Days left in month:</span> <span id="bh-days">--</span></div>
+                <div class="metric-row"><span>Safe to spend per day:</span> <span id="bh-daily">--</span></div>
+                <div class="metric-row"><span>Bills due in next 7 days:</span> <span id="bh-due7">--</span></div>
+                <div class="divider"></div>
+                <div id="bh-alerts" class="alert-list"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 10 5-10 5L2 7z"></path><path d="m2 17 10 5 10-5"></path><path d="m2 12 10 5 10-5"></path></svg></span>Fixed vs Variable Expenses</h2>
+            </div>
+            <div class="metric-group">
+                <div class="metric-row"><span>Fixed Total:</span> <span id="lbl-fixed">$0.00</span> <span id="lbl-fixed-pct" style="color:var(--text-muted);">(0.0%)</span></div>
+                <div class="metric-row"><span>Variable Total:</span> <span id="lbl-variable">$0.00</span> <span id="lbl-variable-pct" style="color:var(--text-muted);">(0.0%)</span></div>
+                <div class="divider"></div>
+                <div class="metric-row"><span>Total Debits:</span> <span id="lbl-total-debits">$0.00</span></div>
+            </div>
+        </div>
+                </div>
+        </div>
+    </div>
+
+    <!-- TRANSACTIONS VIEW (with the Paid toggle switch) -->
+    <div id="transactions-view" class="view-pane" style="display: none;">
+        <div id="tx-due"></div>
+        <div class="card ps-inline">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path><path d="m9 16 2 2 4-4"></path></svg></span>Period Summary (Cleared)<button type="button" class="help" data-help="Only lines marked Paid count here (cleared)." aria-label="What is Period Summary?">?</button></h2>
+                <span class="chip" id="tx-ps-month">--</span>
+            </div>
+            <div class="metric-group">
+                <div class="metric-row"><span>Credits Received:</span> <span id="tx-credits-rcvd" class="text-success">$0.00</span></div>
+                <div class="metric-row"><span>Debits Paid:</span> <span id="tx-debits-paid" class="text-danger">$0.00</span></div>
+                <div class="metric-row"><span>Debits to Pay:</span> <span id="tx-debits-topay">$0.00</span></div>
+                <div class="highlight-box">
+                    <div class="metric-row"><span>Current Balance:</span><span id="tx-curr-bal">$0.00</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 17.5v-11"></path></svg></span>Transactions Ledger</h2>
+                <button class="btn" onclick="openTransactionModal()">+ Add Transaction</button>
+            </div>
+            <div class="toolbar">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="search-input" placeholder="Search description or category..." oninput="renderTransactions()">
+                </div>
+                <label class="all-months" title="Search every month, not just this one"><input type="checkbox" id="search-all" onchange="renderTransactions()"> All months</label>
+                <div class="filter-pills">
+                    <div class="pill active" onclick="setFilter('all', this)">All</div>
+                    <div class="pill" onclick="setFilter('cleared', this)">Cleared</div>
+                    <div class="pill" onclick="setFilter('pending', this)">Pending</div>
+                    <div class="pill" onclick="setFilter('credits', this)">Credits</div>
+                    <div class="pill" onclick="setFilter('debits', this)">Debits</div>
+                </div>
+                <div class="toolbar-actions">
+                    <button type="button" class="btn-secondary" onclick="markDueAsPaid()" title="Mark every pending line dated today or earlier as paid">✓ Mark due as paid</button>
+                </div>
+            </div>
+            <div id="global-results" class="global-results" style="display: none;"></div>
+            <div id="sel-bar" class="sel-bar" hidden>
+                <span class="sel-count" id="sel-count">0 selected</span>
+                <span class="sel-sum" id="sel-sum"></span>
+                <span class="sel-actions">
+                    <button type="button" class="btn" onclick="copySelectedToNextMonth()" title="Copy the ticked lines to the next month as Pending">➡️ Copy to next month</button>
+                    <button type="button" class="btn-secondary" onclick="clearSelection()">Clear</button>
+                </span>
+            </div>
+            <div class="table-container">
+                <table class="ledger-table">
+                    <thead>
+                        <tr>
+                            <th class="col-sel"><input type="checkbox" id="sel-all" aria-label="Select all lines" title="Select all lines shown" onchange="toggleSelectAll(this.checked)"></th>
+                            <th class="col-date">Date</th>
+                            <th class="col-desc">Description</th>
+                            <th class="col-cat">Expense Cat</th>
+                            <th class="col-cat">Credit Cat</th>
+                            <th class="col-type">Type</th>
+                            <th class="col-num">Credit ($)</th>
+                            <th class="col-num">Debit ($)</th>
+                            <th class="col-method">Method</th>
+                            <th class="col-paid">Paid</th>
+                            <th class="col-action">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="txn-tbody"></tbody>
+                    <tfoot id="txn-tfoot"></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- BUDGETS VIEW (upgraded) -->
+    <div id="budgets-view" class="view-pane" style="display: none;">
+        <div class="page-head">
+            <div class="page-head-title">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg></span>Budgets</h2>
+                <span class="chip" id="budgets-month">--</span>
+            </div>
+            <button type="button" class="btn" onclick="openBudgetModal()">+ New Budget</button>
+        </div>
+
+        <div class="bg-summary" id="bg-summary">
+            <div class="bg-sum-item"><span class="lbl">Total Limits</span><b id="bg-sum-limits">$0.00</b><small id="bg-sum-count">0 budgets</small></div>
+            <div class="bg-sum-item"><span class="lbl">Spent So Far</span><b id="bg-sum-spent" class="text-danger">$0.00</b><small id="bg-sum-days"></small></div>
+            <div class="bg-sum-item"><span class="lbl">Left Overall</span><b id="bg-sum-left" class="text-success">$0.00</b><small id="bg-sum-daily"></small></div>
+            <div class="bg-sum-item"><span class="lbl">Over Budget</span><b id="bg-sum-over">None 🎉</b><small id="bg-sum-pace"></small></div>
+        </div>
+
+        <div class="bg-sort-row" id="bg-sort-row">
+            <span style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted);">Sort:</span>
+            <div class="seg-pills" id="bg-sort-pills">
+                <div class="pill active" data-sort="risk" onclick="setBudgetSort('risk')">Risk first</div>
+                <div class="pill" data-sort="name" onclick="setBudgetSort('name')">A–Z</div>
+                <div class="pill" data-sort="size" onclick="setBudgetSort('size')">Biggest</div>
+            </div>
+            <span id="bg-pace-note" style="font-size: 0.74rem; color: var(--text-muted);"></span>
+        </div>
+
+        <div id="budgets-grid" class="budgets-grid"></div>
+
+        <div class="card" style="margin-bottom: 0;">
+            <div class="card-header">
+                <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><path d="M7 7h.01"></path></svg></span>Manage Categories</h2>
+                <label style="font-size: 0.75rem; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" id="budget-rollover-toggle" onchange="toggleBudgetRollover(this.checked)">
+                    🔄 Auto-Rollover Unused Budget
+                </label>
+            </div>
+            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                <button type="button" class="pill active" id="type-pill-expense" onclick="setCategoryCreationType('expense')" style="flex:1; text-align:center;">Expense</button>
+                <button type="button" class="pill" id="type-pill-credit" onclick="setCategoryCreationType('credit')" style="flex:1; text-align:center;">Credit</button>
+            </div>
+            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <input type="text" id="new-category-input" placeholder="New category name..." onkeydown="if(event.key==='Enter') addNewCategory()">
+                <button class="btn" style="padding: 6px 10px;" onclick="addNewCategory()">+ Add</button>
+            </div>
+            <div class="table-container-scrollable">
+                <table>
+                    <thead><tr><th>Category Name</th><th style="width: 70px; text-align: center;">Type</th><th class="col-num" title="Budget limit for this month">Limit ($)</th><th style="width: 75px; text-align: right; padding-right: 8px;">Actions</th></tr></thead>
+                    <tbody id="manage-categories-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    </div><!-- /.app-main -->
+    </div><!-- /.app-shell -->
+    <button type="button" id="fab-add" class="fab" onclick="openTransactionModal()" aria-label="Add transaction (N)" title="Add transaction (N)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+</div>
+
+<div id="help-bubble" role="tooltip"></div>
+<div id="mobile-month-bar">
+    <button type="button" onclick="changeMonth(-1)" aria-label="Previous month">‹</button>
+    <span id="mobile-month-label" onclick="showView('transactions')" title="Open the ledger">September 2026</span>
+    <button type="button" onclick="changeMonth(1)" aria-label="Next month">›</button>
+</div>
+<div id="toast">Synced with Supabase securely</div>
+<div id="print-report"></div>
+
+<script src="js/state.js"></script>
+<script src="js/helpers.js"></script>
+<script src="js/vault.js"></script>
+<script src="js/ledger.js"></script>
+<script src="js/budgets.js"></script>
+<script src="js/planning.js"></script>
+<script src="js/views.js"></script>
+<script src="js/startup.js"></script>
+</body>
+</html>
